@@ -1,0 +1,25 @@
+; Fibonacci-tallene
+; F(n) = F(n-1) + F(n-2)
+; F = {1,1,2,3,5,8,13...}
+
+; r0 og r1 holder tallene i fibbonacci i fibbonacci-sekvensen
+SETT r0, 1
+SETT r1, 1
+; r2 teller hvor mange fibbonacci-tall vi har talt
+SETT r2, 0
+; r4 er hvor mange vi legger til r2 per loop (er 2 siden vi skriver 2 fibbonacci-tall per loop)
+SETT r4, 2
+; r3 er hvor mange fibbonacci-tall som skal skrives (satt til 100)
+SETT r3, 100
+
+
+loop:
+SKRIV r0
+SKRIV r1
+PLUSS r0,r1
+PLUSS r1,r0
+PLUSS r2,r4
+ULIK r2,r3
+BHOPP loop
+
+STOPP
