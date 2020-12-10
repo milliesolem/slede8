@@ -1,7 +1,8 @@
-int x = 2 + 3;
+int x = 1;
 int y = 1;
-while x > 0 {
-	x -= 1;
-	y += y;
+while true {
+	print x;
+	print y;
+	x += y;
+	y += x;
 }
-print y;

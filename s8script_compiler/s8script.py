@@ -126,7 +126,7 @@ def evalBoolean(exp,integers,dest,inverse=False):
 def print_int(exp,integers):
 	res="SETT r1, 0\n"
 	res+=eval2(exp,integers,"r1")
-	res+="\nSKRIV r1"
+	res+="\nSKRIV r1\n"
 	return res
 def compile(inp):
 	lines = inp.split("\n")
