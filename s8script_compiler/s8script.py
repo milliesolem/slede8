@@ -5,8 +5,6 @@ import sys
 """
 Dette programmet tillater brukeren å lage SLEDE-8 programmer igjennom
 et enkelt scripting-språk. 
-
-ADVARSEL: Lite pen python-kode
 """
 
 header_start = """
@@ -53,10 +51,26 @@ SETT r3, 0x01
 SETT r4, 0x00
 SETT r5, 0x00
 multiply_loop:
+LIK r2, r5
+BHOPP multiply_end
 MINUS r2, r3
-PLUSS r5, r0
-ULIK r2, r5
-BHOPP multiply_loop
+PLUSS r4, r0
+HOPP multiply_loop
+multiply_end:
+RETUR
+""",
+"divide":"""
+divide:
+SETT r2, r0
+SETT r3, 0x01
+SETT r4, 0x00
+divide_loop:
+ME r2, r1
+BHOPP divide_end
+MINUS r2, r1
+PLUSS r4, r3
+HOPP divide_loop
+divide_end:
 RETUR
 """
 }
@@ -76,13 +90,29 @@ def eval2(exp,integers,reg):
 	res = ""
 	_exp = ["+"]+exp
 	for i in range(0,len(_exp),2):
+
 		if not _exp[i+1] in integers:
 			if _exp[i+1]=="$input":
 				res+="LES r0\n"
 			else:
-				res+=f"SETT r0, {_exp[i+1]} \n"
-		res+=f"{op_dict[_exp[i]]} {reg}, {integers[_exp[i+1]] if _exp[i+1] in integers else 'r0'}\n"
+				res+=f"SETT r0, {_exp[i+1]}\n"
+		if _exp[i]=="*":
+			res += f"SETT r1, {reg}\n"
+			res += f"TUR multiply\n"
+			res += f"SETT {reg}, r4\n"
+		elif _exp[i]=="/":
+			res += f"SETT r1, {reg}\n"
+			res += f"TUR divide\n"
+			res += f"SETT {reg}, r4\n"
+		elif _exp[i]=="%":
+			res += f"SETT r1, {reg}\n"
+			res += f"TUR divide\n"
+			res += f"SETT {reg}, r2\n"
+		else:
+			res+=f"{op_dict[_exp[i]]} {reg}, {integers[_exp[i+1]] if _exp[i+1] in integers else 'r0'}\n"
 	return res
+
+
 boolean_operations = ["==","!=","<","<=",">",">="]
 boolop_aliases = ["LIK","ULIK","ME","MEL","SE","SEL"]
 boolop_dict = {i:j for i,j  in zip(boolean_operations,boolop_aliases)}
@@ -180,7 +210,7 @@ def compile(inp):
 				
 			buf+= j
 		#print("Tokens:")
-		#print(tokens)
+		print(tokens)
 		if tokens[0]=="using":
 			if len(tokens)==2:
 				header += standard_libary[tokens[1]]
@@ -215,7 +245,8 @@ def compile(inp):
 		elif tokens[0]=="while":
 			if tokens[-1]=="{":
 				code+=f"\nwhile{str(whileCount)}:\n"
-				bracketClose.append(evalBoolean(tokens[1:-1],integers,f"while{str(whileCount)}"))
+				code+=evalBoolean(tokens[1:-1],integers,f"while{str(whileCount)}_end",inverse=True)
+				bracketClose.append(f"HOPP while{str(whileCount)}\nwhile{str(whileCount)}_end:\n")
 				whileCount+=1
 		elif tokens[0]=="if":
 			if tokens[-1]=="{":
@@ -245,6 +276,21 @@ def compile(inp):
 				elif tokens[1]=="-=":
 					code+= eval2(tokens[2:],integers,"r1")
 					code+=f"MINUS {integers[tokens[0]]}, r1\n"
+				elif tokens[1]=="*=":
+					code+= eval2(tokens[2:],integers,"r1")
+					code+=f"SETT r0, {integers[tokens[0]]}\n"
+					code+="TUR multiply\n"
+					code+=f"SETT {integers[tokens[0]]}, r4\n"
+				elif tokens[1]=="/=":
+					code+= eval2(tokens[2:],integers,"r1")
+					code+=f"SETT r0, {integers[tokens[0]]}\n"
+					code+="TUR divide\n"
+					code+=f"SETT {integers[tokens[0]]}, r4\n"
+				elif tokens[1]=="%=":
+					code+= eval2(tokens[2:],integers,"r1")
+					code+=f"SETT r0, {integers[tokens[0]]}\n"
+					code+="TUR divide\n"
+					code+=f"SETT {integers[tokens[0]]}, r2\n"
 
 	#print("\n\nCompiled result:\n\n")
 	header+=header_end
